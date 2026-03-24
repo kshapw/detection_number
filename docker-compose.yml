@@ -23,7 +23,7 @@ services:
       LOG_LEVEL: "info"
 
       # OCR settings
-      DETECT_USE_GPU: "true"
+      DETECT_USE_GPU: "false"
       DETECT_OCR_LANG: "en"
       DETECT_DEFAULT_PHONE_REGION: "IN"
 
