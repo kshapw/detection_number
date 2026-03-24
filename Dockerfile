@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1.7
 # ──────────────────────────────────────────────────────────────────────────────
 # Phone Number Detection Microservice
-# Base: NVIDIA CUDA 12.4.1 + cuDNN runtime on Ubuntu 22.04
+# Base: NVIDIA CUDA 12.0.1 + cuDNN 8 runtime on Ubuntu 22.04
+# paddlepaddle-gpu==2.6.1.post120 requires CUDA 12.0 + cuDNN 8
 # ──────────────────────────────────────────────────────────────────────────────
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
 
 # Prevent interactive prompts during apt installs
 ENV DEBIAN_FRONTEND=noninteractive \
