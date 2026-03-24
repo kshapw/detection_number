@@ -9,7 +9,7 @@ from functools import partial
 import magic
 import structlog
 from fastapi import APIRouter, HTTPException, Request, UploadFile, status
-
+from typing import Optional
 from app.config import get_settings
 from app.schemas import DetectResponse
 from app.services.phone_extractor import extract_phone_numbers
@@ -28,7 +28,7 @@ _EXECUTOR = ThreadPoolExecutor(max_workers=int(_os.getenv("WORKERS", 2)))
 _SAFE_FILENAME_RE = re.compile(r"[^\x20-\x7E]")
 
 
-def _sanitise_filename(name: str | None) -> str:
+def _sanitise_filename(name: Optional[str]) -> str:
     if not name:
         return "<no filename>"
     return _SAFE_FILENAME_RE.sub("?", name)[:256]
