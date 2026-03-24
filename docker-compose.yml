@@ -21,12 +21,17 @@ services:
     volumes:
       # Persist downloaded PaddleOCR models across container restarts
       - paddle_models:/models
+      # PaddleOCR writes model metadata to ~/.paddleocr inside the home dir
+      - paddle_home:/home/appuser/.paddleocr
       # Writable tmp dir needed by OpenCV / PaddleOCR temp files
       - app_tmp:/tmp
     expose:
       - "8000"
     # Container hardening
-    read_only: true
+    # Note: read_only removed — PaddleOCR writes to several locations at runtime
+    # (model cache, temp inference files). Volumes above cover the known paths,
+    # but Python itself may write to others. Security is maintained via non-root
+    # user + no-new-privileges + cap_drop instead.
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -87,6 +92,8 @@ networks:
 
 volumes:
   paddle_models:
+    driver: local
+  paddle_home:
     driver: local
   app_tmp:
     driver: local
