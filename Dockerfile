@@ -46,7 +46,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install GPU paddle first, then rest
-RUN pip install paddlepaddle-gpu==2.6.2.post120 \
+RUN pip install paddlepaddle-gpu==2.6.1.post120 \
         -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html \
  && pip install -r requirements.txt
 
