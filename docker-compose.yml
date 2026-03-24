@@ -1,39 +1,43 @@
+version: "3.9"
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     image: phone-detection:latest
+    container_name: detection_number-app-1
+
     restart: unless-stopped
+
     ports:
       - "8080:8000"
+
+    # ✅ THIS is what actually enables GPU
+    runtime: nvidia
+
     environment:
       HOST: "0.0.0.0"
       PORT: "8000"
-      WORKERS: "2"
+      WORKERS: "1"
       LOG_LEVEL: "info"
+
+      # OCR settings
       DETECT_USE_GPU: "true"
       DETECT_OCR_LANG: "en"
-      LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu"
-      DETECT_OCR_CONFIDENCE_THRESHOLD: "0.6"
       DETECT_DEFAULT_PHONE_REGION: "IN"
-      DETECT_ENABLE_DOCS: "false"
-      DETECT_CORS_ORIGINS: '["http://localhost:3000","https://localhost:3000","https://kbocwwb.karmikakendra.gov.in","https://apikbocwwb.kbocwwb.karmikakendra.com","https://staging.ksk.metahos.com"]'
+
+      # Required for GPU visibility
+      NVIDIA_VISIBLE_DEVICES: "all"
+
+      # Optional but useful
+      LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu"
+
     volumes:
       - paddle_models:/models
       - paddle_home:/home/appuser/.paddleocr
       - app_tmp:/tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+
     logging:
       driver: json-file
       options:
@@ -42,8 +46,5 @@ services:
 
 volumes:
   paddle_models:
-    driver: local
   paddle_home:
-    driver: local
   app_tmp:
-    driver: local

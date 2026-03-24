@@ -1,83 +1,48 @@
-# syntax=docker/dockerfile:1.7
-# ──────────────────────────────────────────────────────────────────────────────
-# Phone Number Detection Microservice
-# Base: NVIDIA CUDA 12.0.1 + cuDNN 8 runtime on Ubuntu 22.04
-# paddlepaddle-gpu==2.6.1.post120 requires CUDA 12.0 + cuDNN 8
-# ──────────────────────────────────────────────────────────────────────────────
-FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
+# CUDA + cuDNN base (REQUIRED for GPU)
+FROM nvidia/cuda:12.3.2-cudnn8-runtime-ubuntu22.04
 
-# Prevent interactive prompts during apt installs
-ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# ── System dependencies ────────────────────────────────────────────────────────
-# Drop the NVIDIA apt repo before updating — CUDA/cuDNN come from the base image,
-# not apt, so the repo is unnecessary and causes transient mirror-sync failures.
-RUN rm -f /etc/apt/sources.list.d/cuda*.list /etc/apt/sources.list.d/nvidia*.list \
- && apt-get update && apt-get install -y --no-install-recommends \
-        python3.11 \
-        python3.11-dev \
-        python3-pip \
-        python3.11-distutils \
-        libgl1-mesa-glx \
-        libglib2.0-0 \
-        libsm6 \
-        libxrender1 \
-        libxext6 \
-        libmagic1 \
-        libgomp1 \
-        curl \
-        ca-certificates \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-dev \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    libgl1 \
+    libmagic1 \
+    git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Make python3.11 the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
- && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
- && python -m pip install --upgrade pip setuptools wheel
+# Set python3 as default
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# ── Create non-root user ───────────────────────────────────────────────────────
-RUN groupadd --gid 1001 appgroup \
- && useradd --uid 1001 --gid appgroup --shell /bin/bash --create-home appuser
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
 
-# ── Model cache volume mount point ─────────────────────────────────────────────
-# PaddleOCR models will be downloaded here on first run, then persist via volume
-RUN mkdir -p /models && chown -R appuser:appgroup /models
+# Install Paddle GPU (IMPORTANT)
+RUN pip install --no-cache-dir paddlepaddle-gpu==2.6.1
 
-# ── Install Python dependencies ────────────────────────────────────────────────
+# Set working directory
 WORKDIR /app
+
+# Copy requirements
 COPY requirements.txt .
 
-# Install GPU paddle first, then rest
-RUN pip install paddlepaddle-gpu==2.6.1.post120 \
-        -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html \
- && pip install -r requirements.txt
+# Install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ── Copy application source ────────────────────────────────────────────────────
-COPY --chown=appuser:appgroup app/ ./app/
-COPY --chown=appuser:appgroup gunicorn.conf.py .
+# Copy app
+COPY app ./app
+COPY gunicorn.conf.py .
 
-# ── Switch to non-root user ───────────────────────────────────────────────────
-USER appuser
-
-# ── Runtime environment ────────────────────────────────────────────────────────
-ENV HOST=0.0.0.0 \
-    PORT=8000 \
-    WORKERS=2 \
-    LOG_LEVEL=info \
-    DETECT_USE_GPU=true \
-    DETECT_OCR_LANG=en \
-    DETECT_ENABLE_DOCS=false \
-    PADDLE_OCR_MODEL_DIR=/models \
-    PYTHONDONTWRITEBYTECODE=1 \
-    TMPDIR=/tmp \
-    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu
-
+# Expose port
 EXPOSE 8000
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-ENTRYPOINT ["gunicorn", "app.main:app", "-c", "gunicorn.conf.py"]
+# Start app
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app.main:app"]
