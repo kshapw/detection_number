@@ -30,5 +30,6 @@ prometheus-fastapi-instrumentator==7.0.0
 python-multipart==0.0.20
 
 # Async
-anyio==4.7.0
+# anyio==4.7.0
+anyio==4.5.2
 httpx==0.28.1  # for testing
