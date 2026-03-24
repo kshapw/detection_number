@@ -17,7 +17,7 @@ services:
       DETECT_OCR_CONFIDENCE_THRESHOLD: "0.6"
       DETECT_DEFAULT_PHONE_REGION: "IN"
       DETECT_ENABLE_DOCS: "false"
-      DETECT_CORS_ORIGINS: '["*"]'   # tighten to specific origins in production
+      DETECT_CORS_ORIGINS: '["http://localhost:3000","https://localhost:3000","https://kbocwwb.karmikakendra.gov.in","https://apikbocwwb.kbocwwb.karmikakendra.com","https://staging.ksk.metahos.com"]'
     volumes:
       # Persist downloaded PaddleOCR models across container restarts
       - paddle_models:/models
