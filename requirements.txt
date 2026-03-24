@@ -6,7 +6,7 @@ pydantic==2.10.3
 pydantic-settings==2.6.1
 
 # OCR
-paddlepaddle-gpu==2.6.1.post120  ; sys_platform != "darwin"
+# paddlepaddle-gpu==2.6.1.post120  ; sys_platform != "darwin"
 paddlepaddle==2.6.1              ; sys_platform == "darwin"
 paddleocr==2.9.1
 
