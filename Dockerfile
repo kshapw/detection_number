@@ -14,7 +14,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # ── System dependencies ────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Drop the NVIDIA apt repo before updating — CUDA/cuDNN come from the base image,
+# not apt, so the repo is unnecessary and causes transient mirror-sync failures.
+RUN rm -f /etc/apt/sources.list.d/cuda*.list /etc/apt/sources.list.d/nvidia*.list \
+ && apt-get update && apt-get install -y --no-install-recommends \
         python3.11 \
         python3.11-dev \
         python3-pip \
