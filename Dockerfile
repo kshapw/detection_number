@@ -1,5 +1,6 @@
 # CUDA + cuDNN base (REQUIRED for GPU)
-FROM nvidia/cuda:12.3.2-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.3.1-cudnn8-runtime-ubuntu22.04
+# FROM nvidia/cuda:12.3.2-cudnn8-runtime-ubuntu22.04
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
