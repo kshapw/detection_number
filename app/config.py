@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from typing import List
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DETECT_", env_file=".env", extra="ignore")
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # Upload limits
     max_upload_bytes: int = 10 * 1024 * 1024  # 10 MB
-    allowed_content_types: list[str] = [
+    allowed_content_types: List[str] = [
         "image/jpeg",
         "image/png",
         "image/webp",
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     workers: int = 2
 
     # CORS — restrict to known origins in production; "*" only for local dev
-    cors_origins: list[str] = ["*"]
+    cors_origins: List[str] = ["*"]
 
     # Set to False in production to disable /docs and /redoc
     enable_docs: bool = False
