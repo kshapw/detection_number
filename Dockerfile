@@ -71,9 +71,9 @@ ENV HOST=0.0.0.0 \
     DETECT_OCR_LANG=en \
     DETECT_ENABLE_DOCS=false \
     PADDLE_OCR_MODEL_DIR=/models \
-    # Prevent Python from writing .pyc files to the read-only fs
     PYTHONDONTWRITEBYTECODE=1 \
-    TMPDIR=/tmp
+    TMPDIR=/tmp \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu
 
 EXPOSE 8000
 

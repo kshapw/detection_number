@@ -14,6 +14,7 @@ services:
       LOG_LEVEL: "info"
       DETECT_USE_GPU: "true"
       DETECT_OCR_LANG: "en"
+      LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu"
       DETECT_OCR_CONFIDENCE_THRESHOLD: "0.6"
       DETECT_DEFAULT_PHONE_REGION: "IN"
       DETECT_ENABLE_DOCS: "false"
