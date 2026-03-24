@@ -25,6 +25,9 @@ python-magic==0.4.27
 structlog==24.4.0
 prometheus-fastapi-instrumentator==7.0.0
 
+# Multipart form upload (required by FastAPI for UploadFile)
+python-multipart==0.0.20
+
 # Async
 anyio==4.7.0
 httpx==0.28.1  # for testing
