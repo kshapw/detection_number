@@ -14,7 +14,7 @@ from app.config import get_settings
 from app.schemas import DetectResponse
 from app.services.phone_extractor import extract_phone_numbers
 from app.services.preprocessor import preprocess
-
+from typing import List, Tuple
 logger = structlog.get_logger(__name__)
 router = APIRouter(tags=["detection"])
 settings = get_settings()
@@ -34,7 +34,7 @@ def _sanitise_filename(name: str | None) -> str:
     return _SAFE_FILENAME_RE.sub("?", name)[:256]
 
 
-def _run_inference(ocr_service, image_bytes: bytes) -> tuple[str, list[float]]:
+def _run_inference(ocr_service, image_bytes: bytes) -> Tuple[str, List[float]]:
     """CPU/GPU-bound work executed in the bounded thread pool executor."""
     rgb = preprocess(image_bytes)
     return ocr_service.run(rgb)

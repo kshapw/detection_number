@@ -10,7 +10,7 @@ import re
 
 import phonenumbers
 import structlog
-
+from typing import List, Tuple
 logger = structlog.get_logger(__name__)
 
 # Cap OCR text fed to the phonenumbers library to prevent excessive scan time
@@ -30,12 +30,12 @@ def _normalise(num_str: str) -> str:
     return re.sub(r"[\s\-.()+]", "", num_str)
 
 
-def extract_phone_numbers(text: str, default_region: str = "IN") -> tuple[list[str], list[str]]:
+def extract_phone_numbers(text: str, default_region: str = "IN") -> Tuple[List[str], List[str]]:
     """Return (phone_number_strings, normalised_keys) deduplicated."""
     # Guard against adversarially long OCR output
     text = text[:_MAX_TEXT_LEN]
 
-    results: list[str] = []
+    results: List[str] = []
     seen: set[str] = set()
 
     def _add(raw: str) -> None:
