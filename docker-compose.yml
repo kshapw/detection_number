@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
     image: phone-detection:latest
     restart: unless-stopped
-    networks:
-      - internal        # reachable only by nginx, not from the host
+    ports:
+      - "8080:8000"
     environment:
       HOST: "0.0.0.0"
       PORT: "8000"
@@ -19,19 +19,9 @@ services:
       DETECT_ENABLE_DOCS: "false"
       DETECT_CORS_ORIGINS: '["http://localhost:3000","https://localhost:3000","https://kbocwwb.karmikakendra.gov.in","https://apikbocwwb.kbocwwb.karmikakendra.com","https://staging.ksk.metahos.com"]'
     volumes:
-      # Persist downloaded PaddleOCR models across container restarts
       - paddle_models:/models
-      # PaddleOCR writes model metadata to ~/.paddleocr inside the home dir
       - paddle_home:/home/appuser/.paddleocr
-      # Writable tmp dir needed by OpenCV / PaddleOCR temp files
       - app_tmp:/tmp
-    expose:
-      - "8000"
-    # Container hardening
-    # Note: read_only removed — PaddleOCR writes to several locations at runtime
-    # (model cache, temp inference files). Volumes above cover the known paths,
-    # but Python itself may write to others. Security is maintained via non-root
-    # user + no-new-privileges + cap_drop instead.
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -43,52 +33,11 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 15s
-      timeout: 5s
-      start_period: 90s
-      retries: 5
     logging:
       driver: json-file
       options:
         max-size: "50m"
         max-file: "5"
-
-  nginx:
-    image: nginx:1.27-alpine
-    restart: unless-stopped
-    networks:
-      - internal    # talks to app over the internal network
-      - external    # only nginx is exposed to the outside world
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx_tmp:/tmp
-      - nginx_cache:/var/cache/nginx
-    read_only: true
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE   # needed to bind port 8080
-    depends_on:
-      app:
-        condition: service_healthy
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-networks:
-  internal:
-    driver: bridge
-    internal: true   # not routable to the host; only container-to-container
-  external:
-    driver: bridge
 
 volumes:
   paddle_models:
@@ -96,8 +45,4 @@ volumes:
   paddle_home:
     driver: local
   app_tmp:
-    driver: local
-  nginx_tmp:
-    driver: local
-  nginx_cache:
     driver: local
