@@ -55,6 +55,10 @@ def create_app() -> FastAPI:
         excluded_handlers=["/health", "/ready", "/metrics"],
     ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
+    @app.get("/", include_in_schema=False)
+    async def root():
+        return {"service": "Phone Number Detection API", "version": "1.0.0", "docs": "/docs"}
+
     @app.get("/health", response_model=HealthResponse, tags=["ops"])
     async def health():
         return HealthResponse(status="ok")

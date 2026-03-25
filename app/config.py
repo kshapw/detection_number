@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     cors_origins: List[str] = ["*"]
 
     # Set to False in production to disable /docs and /redoc
-    enable_docs: bool = False
+    enable_docs: bool = True
 
 
 @lru_cache
