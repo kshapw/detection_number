@@ -39,9 +39,22 @@ def _clahe(gray: np.ndarray) -> np.ndarray:
     return clahe.apply(gray)
 
 
+_DESKEW_SAMPLE_WIDTH = 640  # px — used only for angle detection, not final rotation
+
+
 def _deskew(gray: np.ndarray) -> np.ndarray:
     """Rotate image to straighten dominant text lines (max ±15°)."""
-    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+    h, w = gray.shape
+
+    # Downscale a copy for fast line detection; angle is scale-invariant.
+    # A 3024×4032 photo → 640×853 sample = 21× fewer pixels for Canny + HoughLinesP.
+    if w > _DESKEW_SAMPLE_WIDTH:
+        scale = _DESKEW_SAMPLE_WIDTH / w
+        sample = cv2.resize(gray, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+    else:
+        sample = gray  # already small enough
+
+    edges = cv2.Canny(sample, 50, 150, apertureSize=3)
     lines = cv2.HoughLinesP(edges, 1, math.pi / 180, threshold=80, minLineLength=50, maxLineGap=10)
     if lines is None:
         return gray
@@ -59,13 +72,12 @@ def _deskew(gray: np.ndarray) -> np.ndarray:
 
     median_angle = float(np.median(angles))
     if abs(median_angle) < 0.5:
-        return gray
+        return gray  # already straight — skip warpAffine entirely
 
-    h, w = gray.shape
+    # Rotate the FULL original image
     center = (w // 2, h // 2)
     M = cv2.getRotationMatrix2D(center, median_angle, 1.0)
-    rotated = cv2.warpAffine(gray, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    return rotated
+    return cv2.warpAffine(gray, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
 
 
 def _resize_if_small(img: np.ndarray, min_dim: int = 800) -> np.ndarray:
