@@ -14,7 +14,6 @@ from app.config import get_settings
 from app.schemas import DetectResponse
 from app.services.phone_extractor import extract_phone_numbers
 from app.services.preprocessor import preprocess
-from typing import List, Tuple
 logger = structlog.get_logger(__name__)
 router = APIRouter(tags=["detection"])
 settings = get_settings()
@@ -34,7 +33,7 @@ def _sanitise_filename(name: Optional[str]) -> str:
     return _SAFE_FILENAME_RE.sub("?", name)[:256]
 
 
-def _run_inference(ocr_service, image_bytes: bytes) -> Tuple[str, List[float]]:
+def _run_inference(ocr_service, image_bytes: bytes) -> str:
     """CPU/GPU-bound work executed in the bounded thread pool executor."""
     rgb = preprocess(image_bytes)
     return ocr_service.run(rgb)
@@ -84,7 +83,7 @@ async def detect(request: Request, file: UploadFile) -> DetectResponse:
     # asyncio.get_running_loop() is the correct API in Python 3.10+ async contexts.
     loop = asyncio.get_running_loop()
     try:
-        full_text, confidences = await loop.run_in_executor(
+        full_text = await loop.run_in_executor(
             _EXECUTOR, partial(_run_inference, request.app.state.ocr, data)
         )
     except ValueError as exc:
@@ -93,7 +92,8 @@ async def detect(request: Request, file: UploadFile) -> DetectResponse:
         logger.exception("detect.ocr_error", error=str(exc))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OCR failed")
 
-    phone_numbers, _ = extract_phone_numbers(full_text, settings.default_phone_region)
+    # max_results=1: labour cards contain exactly one phone number; stop as soon as it's found
+    phone_numbers, _ = extract_phone_numbers(full_text, settings.default_phone_region, max_results=1)
 
     latency_ms = round((time.perf_counter() - t0) * 1000, 2)
     logger.info(
@@ -106,6 +106,5 @@ async def detect(request: Request, file: UploadFile) -> DetectResponse:
     return DetectResponse(
         phone_numbers=phone_numbers,
         raw_text=full_text,
-        confidence_scores=confidences,
         latency_ms=latency_ms,
     )

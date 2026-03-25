@@ -5,8 +5,7 @@ Thread-safe for concurrent read access once initialised.
 """
 
 import threading
-from typing import Optional
-from typing import List, Tuple
+from typing import List, Optional
 import numpy as np
 import structlog
 from paddleocr import PaddleOCR
@@ -44,24 +43,21 @@ class OCRService:
             rec_model_dir="/models/rec",
             cls_model_dir="/models/cls",
         )
-        self._confidence_threshold = settings.ocr_confidence_threshold
         logger.info("ocr.ready")
 
-    def run(self, image: np.ndarray) -> Tuple[str, List[float]]:
+    def run(self, image: np.ndarray) -> str:
         """Run OCR on a preprocessed RGB numpy array.
 
         Returns:
             full_text: all recognised text joined by newlines
-            confidences: per-line confidence scores (filtered by threshold)
         """
         with self._lock:
             result = self._engine.ocr(image, cls=True)
 
         lines: List[str] = []
-        confidences: List[float] = []
 
         if not result or result[0] is None:
-            return "", []
+            return ""
 
         for page in result:
             if page is None:
@@ -69,14 +65,11 @@ class OCRService:
             for item in page:
                 # item: [bbox, (text, confidence)]
                 try:
-                    text, conf = item[1]
+                    text = item[1][0]
                 except (IndexError, TypeError, ValueError):
                     continue
-                if conf < self._confidence_threshold:
-                    continue
                 lines.append(text.strip())
-                confidences.append(round(float(conf), 4))
 
         full_text = "\n".join(lines)
         logger.debug("ocr.run.complete", lines=len(lines), text_preview=full_text[:120])
-        return full_text, confidences
+        return full_text

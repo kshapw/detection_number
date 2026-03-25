@@ -26,6 +26,9 @@ services:
       DETECT_USE_GPU: "false"
       DETECT_OCR_LANG: "en"
       DETECT_DEFAULT_PHONE_REGION: "IN"
+      # Higher thresholds → fewer detected text regions → fewer recognition passes → faster
+      DETECT_OCR_DET_DB_THRESH: "0.5"
+      DETECT_OCR_DET_DB_BOX_THRESH: "0.6"
 
       # Required for GPU visibility
       NVIDIA_VISIBLE_DEVICES: "all"

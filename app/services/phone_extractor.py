@@ -34,36 +34,48 @@ def _normalise(num_str: str) -> str:
     return key
 
 
-def extract_phone_numbers(text: str, default_region: str = "IN") -> Tuple[List[str], List[str]]:
-    """Return (phone_number_strings, normalised_keys) deduplicated."""
+def extract_phone_numbers(
+    text: str, default_region: str = "IN", max_results: int = 0
+) -> Tuple[List[str], List[str]]:
+    """Return (phone_number_strings, normalised_keys) deduplicated.
+
+    Args:
+        max_results: stop after finding this many unique numbers (0 = unlimited).
+                     Pass 1 when only a single phone number is expected (e.g. a
+                     labour card) to short-circuit both passes as soon as it is found.
+    """
     # Guard against adversarially long OCR output
     text = text[:_MAX_TEXT_LEN]
 
     results: List[str] = []
     seen: set[str] = set()
 
-    def _add(raw: str) -> None:
+    def _add(raw: str) -> bool:
+        """Add number if unseen. Returns True when max_results limit is reached."""
         key = _normalise(raw)
         if key and key not in seen and len(key) >= 7:
             seen.add(key)
             results.append(raw)
+            if max_results > 0 and len(results) >= max_results:
+                return True
+        return False
 
     # Pass 1: phonenumbers library
     try:
         for match in phonenumbers.PhoneNumberMatcher(text, default_region):
-            formatted = phonenumbers.format_number(
-                match.number, phonenumbers.PhoneNumberFormat.NATIONAL
-            )
-            # Strip non-digit for storage, keep E.164 as well
             e164 = phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164)
-            _add(e164)
+            if _add(e164):
+                logger.debug("phone_extraction.result", count=len(results), numbers=results)
+                return results, list(seen)
     except Exception as exc:
         logger.warning("phonenumbers.matcher.failed", error=str(exc))
 
     # Pass 2: Indian mobile regex fallback
     for m in _INDIAN_MOBILE_RE.finditer(text):
         raw = m.group(1)  # bare 10 digits
-        _add(raw)
+        if _add(raw):
+            logger.debug("phone_extraction.result", count=len(results), numbers=results)
+            return results, list(seen)
 
     logger.debug("phone_extraction.result", count=len(results), numbers=results)
     return results, list(seen)
