@@ -26,8 +26,12 @@ _INDIAN_MOBILE_RE = re.compile(
 
 
 def _normalise(num_str: str) -> str:
-    """Strip whitespace/hyphens/dots for deduplication key."""
-    return re.sub(r"[\s\-.()+]", "", num_str)
+    """Strip whitespace/hyphens/dots for deduplication key, then strip leading 91 country code."""
+    key = re.sub(r"[\s\-.()+]", "", num_str)
+    # Normalise Indian numbers: 918722359047 → 8722359047
+    if len(key) == 12 and key.startswith("91") and key[2] in "6789":
+        key = key[2:]
+    return key
 
 
 def extract_phone_numbers(text: str, default_region: str = "IN") -> Tuple[List[str], List[str]]:
