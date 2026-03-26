@@ -13,8 +13,13 @@ services:
     ports:
       - "8080:8000"
 
-    # ✅ THIS is what actually enables GPU
-    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
     environment:
       HOST: "0.0.0.0"
@@ -23,15 +28,16 @@ services:
       LOG_LEVEL: "info"
 
       # OCR settings
-      DETECT_USE_GPU: "false"
+      DETECT_USE_GPU: "true"
       DETECT_OCR_LANG: "en"
       DETECT_DEFAULT_PHONE_REGION: "IN"
       # Higher thresholds → fewer detected text regions → fewer recognition passes → faster
       DETECT_OCR_DET_DB_THRESH: "0.5"
       DETECT_OCR_DET_DB_BOX_THRESH: "0.6"
 
-      # Required for GPU visibility
+      # NVIDIA runtime hints
       NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
 
       # Optional but useful
       LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu"
