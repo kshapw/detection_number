@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip
 
 # Install Paddle CPU for inference on non-GPU hosts.
-RUN pip install --no-cache-dir paddlepaddle==2.6.1
+RUN pip install --no-cache-dir paddlepaddle==2.6.2
 
 # 🔥 Fix lmdb + cffi issues (VERY IMPORTANT)
 RUN pip install --no-cache-dir cffi
