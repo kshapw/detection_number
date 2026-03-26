@@ -30,8 +30,8 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # -----------------------------
 RUN pip install --no-cache-dir --upgrade pip
 
-# Install Paddle GPU (compatible with CUDA 11.8)
-RUN pip install --no-cache-dir paddlepaddle-gpu==2.5.2
+# Install the Paddle GPU wheel that matches CUDA 11.8.
+RUN pip install --no-cache-dir paddlepaddle-gpu==2.6.1
 
 # 🔥 Fix lmdb + cffi issues (VERY IMPORTANT)
 RUN pip install --no-cache-dir cffi
