@@ -1,6 +1,6 @@
 # Phone Number Detection Microservice
 
-Fully offline REST API that extracts phone numbers from uploaded images using GPU-accelerated OCR.
+Fully offline REST API that extracts phone numbers from uploaded images using CPU-based OCR.
 
 ---
 
@@ -74,32 +74,11 @@ docker compose down
 
 ---
 
-## Pick a specific GPU (multi-GPU server)
+## CPU-only deployment
 
-Edit `docker-compose.yml` under the `app` service:
-
-```yaml
-deploy:
-  resources:
-    reservations:
-      devices:
-        - driver: nvidia
-          device_ids: ["1"]      # ← change to GPU index you want (0, 1, 2 …)
-          capabilities: [gpu]
-```
-
-Then:
-```bash
-docker compose up --build -d
-```
-
----
-
-## Check GPU usage inside container
-
-```bash
-docker exec -it detection-app-1 nvidia-smi
-```
+The default Docker image runs PaddleOCR on CPU and does not request any GPU
+devices from Docker. This keeps the service isolated from other GPU workloads
+on the host.
 
 ---
 
@@ -134,7 +113,7 @@ curl -F "file=@card.jpg" http://localhost:8080/detect
 
 | Variable | Default | Description |
 |---|---|---|
-| `DETECT_USE_GPU` | `true` | Use CUDA for inference |
+| `DETECT_USE_GPU` | `false` | Use CUDA for inference |
 | `DETECT_OCR_LANG` | `en` | PaddleOCR language (`en`, `hi`, `kn`) |
 | `DETECT_OCR_CONFIDENCE_THRESHOLD` | `0.6` | Min OCR confidence per text token |
 | `DETECT_DEFAULT_PHONE_REGION` | `IN` | Country hint for phone parsing |

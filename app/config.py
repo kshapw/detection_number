@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DETECT_", env_file=".env", extra="ignore")
 
     # OCR
-    use_gpu: bool = True
+    use_gpu: bool = False
     ocr_lang: str = "en"
     ocr_confidence_threshold: float = 0.6
     ocr_det_db_thresh: float = 0.3

@@ -11,9 +11,8 @@ bind = f"{host}:{port}"
 # Worker class — Uvicorn async workers
 worker_class = "uvicorn.workers.UvicornWorker"
 
-# 2 workers: each loads its own PaddleOCR instance on the L40S (48 GB VRAM).
-# PaddleOCR GPU footprint is ~1–2 GB per worker, so 2 workers are safe.
-# Increase to 4 if throughput demands it.
+# OCR startup is heavyweight, so keep the default modest unless CPU capacity
+# and request volume justify more workers.
 workers = int(os.getenv("WORKERS", 2))
 
 # Timeouts
